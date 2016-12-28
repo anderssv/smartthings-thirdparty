@@ -5,8 +5,8 @@ import urllib.request
 import re
 
 def extractNamespaceAndComponentName(file_contents):
-	namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1).replace(".", "-")
-	component_name = re.search("name: \"(.*?)\"", file_contents).group(1).lower().replace("(", "").replace(")", "").replace(" ", "-")
+	namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1).lower().replace(".", "-")
+	component_name = re.search("name: \"(.*?)\"", file_contents).group(1).lower().replace("(", "").replace(")", "").replace(" ", "-").replace("'", "")
 
 	return namespace, component_name
 
