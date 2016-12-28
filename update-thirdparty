@@ -12,11 +12,11 @@ with open('device-handlers.list') as depfile:
 		file_contents = response.read().decode('UTF-8')
 		namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1)
 
-		out_path = os.path.join("devicetypes", namespace)
+		filename = os.path.basename(line).strip()
+		out_path = os.path.join("devicetypes", namespace, filename.replace(".groovy", ".src"))
 		if not os.path.exists(out_path):
 			os.makedirs(out_path)
 
-		filename = os.path.basename(line).strip()
 		with open(os.path.join(out_path, filename), 'w') as outfile:
 			outfile.write(file_contents)
 
