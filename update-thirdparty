@@ -11,13 +11,18 @@ with open('device-handlers.list') as depfile:
 		response = urllib.request.urlopen(line.strip())
 		file_contents = response.read().decode('UTF-8')
 		namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1)
+		component_name = re.search("name: \"(.*?)\"", file_contents).group(1)
+		component_name = component_name.lower().replace("(", "").replace(")", "").replace(" ", "-")
 
-		filename = os.path.basename(line).strip()
-		out_path = os.path.join("devicetypes", namespace, filename.replace(".groovy", ".src"))
+
+		out_path = os.path.join("devicetypes", namespace, component_name + ".src")
 		if not os.path.exists(out_path):
 			os.makedirs(out_path)
 
-		with open(os.path.join(out_path, filename), 'w') as outfile:
+		filename = component_name + ".groovy"
+		out_file = os.path.join(out_path, filename)
+		print (out_file)
+		with open(out_file, 'w') as outfile:
 			outfile.write(file_contents)
 
 print ("ALL OK\n")
