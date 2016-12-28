@@ -4,25 +4,37 @@ import os
 import urllib.request
 import re
 
-with open('device-handlers.list') as depfile:
-	for line in depfile.readlines():
-		print (line)
+def extractNamespaceAndComponentName(file_contents):
+	namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1)
+	component_name = re.search("name: \"(.*?)\"", file_contents).group(1)
 
-		response = urllib.request.urlopen(line.strip())
-		file_contents = response.read().decode('UTF-8')
-		namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1)
-		component_name = re.search("name: \"(.*?)\"", file_contents).group(1)
-		component_name = component_name.lower().replace("(", "").replace(")", "").replace(" ", "-")
+	return namespace, component_name
+
+def createFileNameFromComponentName(component_name):
+	return component_name.lower().replace("(", "").replace(")", "").replace(" ", "-")
+
+def downloadComponents(component_list_file, output_base):
+	with open(component_list_file) as depfile:
+		for line in depfile.readlines():
+			print (line)
+
+			response = urllib.request.urlopen(line.strip())
+			file_contents = response.read().decode('UTF-8')
+
+			namespace, component_name = extractNamespaceAndComponentName(file_contents)
+			component_name = createFileNameFromComponentName(component_name)
 
 
-		out_path = os.path.join("devicetypes", namespace, component_name + ".src")
-		if not os.path.exists(out_path):
-			os.makedirs(out_path)
+			out_path = os.path.join(output_base, namespace, component_name + ".src")
+			if not os.path.exists(out_path):
+				os.makedirs(out_path)
 
-		filename = component_name + ".groovy"
-		out_file = os.path.join(out_path, filename)
-		print (out_file)
-		with open(out_file, 'w') as outfile:
-			outfile.write(file_contents)
+			filename = component_name + ".groovy"
+			out_file = os.path.join(out_path, filename)
+			print (out_file)
+			with open(out_file, 'w') as outfile:
+				outfile.write(file_contents)
+
+downloadComponents("device-handlers.list", "devicetypes")
 
 print ("ALL OK\n")
