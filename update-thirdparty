@@ -5,13 +5,10 @@ import urllib.request
 import re
 
 def extractNamespaceAndComponentName(file_contents):
-	namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1)
-	component_name = re.search("name: \"(.*?)\"", file_contents).group(1)
+	namespace = re.search("namespace: \"(.*?)\"", file_contents).group(1).replace(".", "-")
+	component_name = re.search("name: \"(.*?)\"", file_contents).group(1).lower().replace("(", "").replace(")", "").replace(" ", "-")
 
 	return namespace, component_name
-
-def createFileNameFromComponentName(component_name):
-	return component_name.lower().replace("(", "").replace(")", "").replace(" ", "-")
 
 def downloadComponents(component_list_file, output_base):
 	with open(component_list_file) as depfile:
@@ -22,7 +19,6 @@ def downloadComponents(component_list_file, output_base):
 			file_contents = response.read().decode('UTF-8')
 
 			namespace, component_name = extractNamespaceAndComponentName(file_contents)
-			component_name = createFileNameFromComponentName(component_name)
 
 
 			out_path = os.path.join(output_base, namespace, component_name + ".src")
@@ -36,5 +32,6 @@ def downloadComponents(component_list_file, output_base):
 				outfile.write(file_contents)
 
 downloadComponents("device-handlers.list", "devicetypes")
+downloadComponents("smartapps.list", "smartapps")
 
 print ("ALL OK\n")
