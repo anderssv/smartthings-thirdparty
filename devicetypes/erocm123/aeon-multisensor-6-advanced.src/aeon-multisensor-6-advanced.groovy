@@ -4,7 +4,7 @@
  *   
  *	github: Eric Maycock (erocm123)
  *	email: erocmail@gmail.com
- *	Date: 2016-08-18 6:45 PM
+ *	Date: 2017-03-08 6:45 PM
  *	Copyright Eric Maycock
  *
  *  Code has elements from other community sources @CyrilPeponnet, @Robert_Vandervoort. Greatly reworked and 
@@ -35,6 +35,7 @@
 		capability "Battery"
         capability "Refresh"
         capability "Tamper Alert"
+        capability "Health Check"
         
         command "resetBatteryRuntime"
         command "resetTamperAlert"
@@ -48,11 +49,8 @@
 
 	}
     preferences {
-        
-        input description: "Once you change values on this page, the \"Synced\" Status will become \"Pending\" status. You can then force the sync by clicking the device button or just wait for the next WakeUp (60 minutes).", displayDuringSetup: false, type: "paragraph", element: "paragraph"
-        
+        input description: "Once you change values on this page, the corner of the \"configuration\" icon will change orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph"
 		generate_preferences(configuration_model())
-        
     }
 	simulator {
 	}
@@ -60,13 +58,13 @@
 		multiAttributeTile(name:"main", type:"generic", width:6, height:4) {
 			tileAttribute("device.temperature", key: "PRIMARY_CONTROL") {
             	attributeState "temperature",label:'${currentValue}°', icon:"st.motion.motion.inactive", backgroundColors:[
-                	[value: 32, color: "#153591"],
+                	[value: 31, color: "#153591"],
                     [value: 44, color: "#1e9cbb"],
                     [value: 59, color: "#90d2a7"],
 					[value: 74, color: "#44b621"],
 					[value: 84, color: "#f1d801"],
-					[value: 92, color: "#d04e00"],
-					[value: 98, color: "#bc2323"]
+					[value: 95, color: "#d04e00"],
+					[value: 96, color: "#bc2323"]
 				]
             }
             tileAttribute ("statusText", key: "SECONDARY_CONTROL") {
@@ -75,17 +73,17 @@
 		}
         standardTile("motion","device.motion", inactiveLabel: false, width: 2, height: 2) {
                 state "inactive",label:'no motion',icon:"st.motion.motion.inactive",backgroundColor:"#ffffff"
-                state "active",label:'motion',icon:"st.motion.motion.active",backgroundColor:"#53a7c0"
+                state "active",label:'motion',icon:"st.motion.motion.active",backgroundColor:"#00a0dc"
 		}
 		valueTile("temperature","device.temperature", inactiveLabel: false, width: 2, height: 2) {
             	state "temperature",label:'${currentValue}°',backgroundColors:[
-                	[value: 32, color: "#153591"],
+                	[value: 31, color: "#153591"],
                     [value: 44, color: "#1e9cbb"],
                     [value: 59, color: "#90d2a7"],
 					[value: 74, color: "#44b621"],
 					[value: 84, color: "#f1d801"],
-					[value: 92, color: "#d04e00"],
-					[value: 98, color: "#bc2323"]
+					[value: 95, color: "#d04e00"],
+					[value: 96, color: "#bc2323"]
 				]
 		}
 		valueTile("humidity","device.humidity", inactiveLabel: false, width: 2, height: 2) {
@@ -114,31 +112,31 @@
             state("active", label:'tamper', icon:"st.motion.acceleration.active", backgroundColor:"#f39c12")
 		}
         standardTile("tamper", "device.tamper", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state("clear", label:'clear', icon:"st.contact.contact.closed", backgroundColor:"#53a7c0", action: "resetTamperAlert")
-            state("detected", label:'tamper', icon:"st.contact.contact.open", backgroundColor:"#f39c12", action: "resetTamperAlert")
+			state("clear", label:'clear', icon:"st.contact.contact.closed", backgroundColor:"#cccccc", action: "resetTamperAlert")
+            state("detected", label:'tamper', icon:"st.contact.contact.open", backgroundColor:"#e86d13", action: "resetTamperAlert")
 		}
-		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+		valueTile("battery", "device.battery", inactiveLabel: false, width: 2, height: 2) {
 			state "battery", label:'${currentValue}% battery', unit:""
 		}
-        valueTile("batteryTile", "device.batteryTile", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+        valueTile("batteryTile", "device.batteryTile", inactiveLabel: false, width: 2, height: 2) {
 			state "batteryTile", label:'${currentValue}', unit:""
 		}
         valueTile(
-			"currentFirmware", "device.currentFirmware", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			"currentFirmware", "device.currentFirmware", inactiveLabel: false, width: 2, height: 2) {
 			state "currentFirmware", label:'Firmware: v${currentValue}', unit:""
 		}
         standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", label:'Refresh', action:"refresh.refresh", icon:"st.secondary.refresh-icon"
+			state "default", label:'', action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-        valueTile("configure", "device.needUpdate", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-            state("NO" , label:'Synced', action:"configuration.configure", backgroundColor:"#8acb47")
-            state("YES", label:'Pending', action:"configuration.configure", backgroundColor:"#f39c12")
+        standardTile("configure", "device.needUpdate", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+            state "NO" , label:'', action:"configuration.configure", icon:"st.secondary.configure"
+            state "YES", label:'', action:"configuration.configure", icon:"https://github.com/erocm123/SmartThingsPublic/raw/master/devicetypes/erocm123/qubino-flush-1d-relay.src/configure@2x.png"
         }
-        valueTile(
+        standardTile(
 			"batteryRuntime", "device.batteryRuntime", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "batteryRuntime", label:'Battery: ${currentValue} Double tap to reset counter', unit:"", action:"resetBatteryRuntime"
 		}
-        valueTile(
+        standardTile(
 			"statusText2", "device.statusText2", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "statusText2", label:'${currentValue}', unit:"", action:"resetBatteryRuntime"
 		}
@@ -415,6 +413,18 @@ def refresh() {
     commands(request)
 }
 
+def ping() {
+   	logging("$device.displayName ping()")
+
+    def request = []
+    request << zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType:1, scale:1)
+    request << zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType:3, scale:1)
+    request << zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType:5, scale:1)
+    request << zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType:27, scale:1)
+    
+    commands(request)
+}
+
 def configure() {
     state.enableDebugging = settings.enableDebugging
     logging("Configuring Device For SmartThings Use")
@@ -428,6 +438,7 @@ def configure() {
 def updated()
 {
     state.enableDebugging = settings.enableDebugging
+    sendEvent(name: "checkInterval", value: 2 * 60 * 60 + 2 * 60, displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
     logging("updated() is being called")
     if(settings."101" != null && settings."101" == "240") { 
         sendEvent(name:"batteryTile", value: "USB Powered", displayed:false)
