@@ -37,6 +37,7 @@ metadata {
     command "setColorRelax"
     command "setColorEveryday"
     command "setColorFocus"
+    command "nextColor"
 
     fingerprint profileId: "0104", inClusters: "0000, 0003, 0004, 0005, 0006, 0008, 0300, 0B05, 1000", outClusters: "0005, 0019, 0020, 1000", manufacturer: "IKEA of Sweden",  model: "TRADFRI bulb E27 WS�opal 980lm", deviceJoinName: "TRÅDFRI bulb E27 WS opal 980lm"
     fingerprint profileId: "0104", inClusters: "0000, 0003, 0004, 0005, 0006, 0008, 0300, 0B05, 1000", outClusters: "0005, 0019, 0020, 1000", manufacturer: "IKEA of Sweden",  model: "TRADFRI bulb E27 WS opal 980lm", deviceJoinName: "TRÅDFRI bulb E27 WS opal 980lm"
@@ -50,8 +51,10 @@ metadata {
   }
 
   preferences {
-    input name: "linkLevelAndColor", type: "bool", title: "Link level change with color temperature?", defaultValue: true, displayDuringSetup: true, required: true
+    input name: "linkLevelAndColor", type: "bool", title: "Link level change with color temperature?", defaultValue: true, displayDuringSetup: true, required: false
     input name: "delay", type: "number", title: "Delay between level and color temperature change in milliseconds", defaultValue: 0, displayDuringSetup: true, required: false
+    input name: "colorTempMin", type: "number", title: "Color temperature at lowest level(1%)", defaultValue: 2200, range: "2200..4000", displayDuringSetup: true, required: false
+    input name: "colorTempMax", type: "number", title: "Color temperature at highest level(100%)", defaultValue: 3200, range: "2200..4000", displayDuringSetup: true, required: false
     input name: "colorNameAsKelvin", type: "bool", title: "Display color temperature as kelvin", defaultValue: false, displayDuringSetup: true, required: false
   }
 
@@ -78,8 +81,12 @@ metadata {
       state "colorName", label: '${currentValue}'
     }
 
-    standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+    standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
       state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
+    }
+    
+    standardTile("nextColor", "device.default", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
+      state "default", label:"", action:"nextColor", icon:"https://github.com/edvaldeysteinsson/SmartThingsResources/raw/master/ikea_tradfri/next_color.png"
     }
 
     standardTile("colorRelax", "device.default", inactiveLabel: false, width: 2, height: 2) {
@@ -95,7 +102,7 @@ metadata {
     }
 
     main(["switch"])
-    details(["switch", "colorTempSliderControl", "colorName", "refresh", "colorRelax", "colorEveryday", "colorFocus"])
+    details(["switch", "colorTempSliderControl", "colorName", "refresh", "nextColor", "colorRelax", "colorEveryday", "colorFocus"])
   }
 }
 
@@ -156,12 +163,19 @@ def setLevel(value) {
     zigbee.setLevel(value)
   } else {
     if(linkLevelAndColor ?: false){
-      // this will set the color temperature based on the level, 2200(1%) to 3195(100%)
-      // it's a bit more like how a traditional filament bulb behaves and since i prefer
-      // warmer tones i went with 1% being 2200 rather than 2205 =)
+      def colorTempMin = colorTempMin ?: 2200;
+      def colorTempMax = colorTempMax ?: 3200;
+      def stepSize = (colorTempMax - colorTempMin) / 99;
+      int colorTemperature = Math.ceil((colorTempMin - stepSize) + (stepSize*value));
+      
+      // this will set the color temperature based on the level, default color temperatures are
+      // 2200(1%) to 3200(100%) but they can be set in preferences.
+      // This is a bit more like how a traditional bulb behaves, it will turn warmer at lower levels.
+      // There is nothing preventing a user from doing the opposite, 4000 at 1% and 2200 at 100% if
+      // they feel like it.
       delayBetween([
         zigbee.setLevel(value),
-        zigbee.setColorTemperature(2190 + (10*value))
+        zigbee.setColorTemperature(colorTemperature)
       ], delay ?: 0)
     } else {
       zigbee.setLevel(value)
@@ -194,6 +208,8 @@ def setColorTemperature(value) {
 }
 
 def setColorName(value){
+  state.colourTemperature = value
+  
   if(colorNameAsKelvin ?: false){
     sendEvent(name: "colorName", value: "${value} K" )
   } else {
@@ -210,6 +226,16 @@ def setColorName(value){
 
       sendEvent(name: "colorName", value: genericName)
     }
+  }
+}
+
+def nextColor() {
+  if(state.colourTemperature < 2450) {
+    setColorEveryday()
+  } else if (state.colourTemperature < 2950) {
+    setColorFocus()
+  } else {
+    setColorRelax()
   }
 }
 
