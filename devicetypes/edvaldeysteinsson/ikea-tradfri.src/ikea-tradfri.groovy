@@ -21,7 +21,7 @@
  *  Date: 2017-03-18
  */
 metadata {
-  definition (name: "IKEA Trådfri", namespace: "edvaldeysteinsson", author: "Edvald Eysteinsson") {
+  definition (name: "IKEA-Tradfri", namespace: "edvaldeysteinsson", author: "Edvald Eysteinsson") {
     capability "Actuator"
     capability "Color Temperature"
     capability "Configuration"
@@ -86,7 +86,7 @@ metadata {
     }
     
     standardTile("nextColor", "device.default", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
-      state "default", label:"", action:"nextColor", icon:"https://github.com/edvaldeysteinsson/SmartThingsResources/raw/master/ikea_tradfri/next_color.png"
+      state "default", label:"", action:"nextColor", icon:"https://github.com/edvaldeysteinsson/SmartThingsResources/raw/master/images/next_color.png"
     }
 
     standardTile("colorRelax", "device.default", inactiveLabel: false, width: 2, height: 2) {
