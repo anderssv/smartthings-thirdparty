@@ -11,7 +11,8 @@ def extractNamespaceAndComponentName(file_contents):
 		.replace(")", "")\
 		.replace(" ", "-")\
 		.replace("/", "-")\
-		.replace("'", "")
+		.replace("'", "")\
+		.replace(".", "_")
 
 	return namespace, component_name
 
