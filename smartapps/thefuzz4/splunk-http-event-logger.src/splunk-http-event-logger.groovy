@@ -17,6 +17,7 @@
 * 12-04-2016 Fixed the results so that they not only spit out the results but they still also send it off to splunk like it should
 * 02-16-2016 Added the ability for non-ssl/SSL
 * 05-18-2016 Added the ability to log to splunk over the lan and 
+* 10-24-2017 Added the code from Uto to log humidity readings and spelling fixes
 * used adrabkin code fix for the length with local logging
 */
 definition(
@@ -145,6 +146,7 @@ subscribe(batteries,	"battery", batteryHandler)
 subscribe(button, "button", buttonHandler)
 subscribe(voltageMeasurement, "voltage", voltageHandler)
 subscribe(lockDevice, "lock", lockHandler)
+subscribe(humidities, "humidity", humidityHandler)
 }
 
 def genericHandler(evt) {
@@ -322,6 +324,10 @@ def powerHandler(evt) {
 genericHandler(evt)
 }
 
+def humidityHandler(evt) {
+genericHandler(evt)
+}
+
 def batteryHandler(evt) {
 log.trace "$evt"
 def json = ""
@@ -403,11 +409,11 @@ log.debug "Unexpected response error: ${ex.statusCode}"
 }
 
 def buttonHandler(evt) {
-genericHandlers(evt)
+genericHandler(evt)
 }
 
 def voltageHandler(evt) {
-genericHandlers(evt)
+genericHandler(evt)
 }
 
 def lockHandler(evt) {
