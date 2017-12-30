@@ -7,3 +7,7 @@ https://raw.githubusercontent.com/a4refillpad/Xiaomi/master/devicetypes/a4refill
 https://raw.githubusercontent.com/a4refillpad/Xiaomi/master/devicetypes/a4refillpad/xiaomi-motion-sensor.src/xiaomi-motion-sensor.groovy
 https://raw.githubusercontent.com/a4refillpad/Xiaomi/master/devicetypes/a4refillpad/xiaomi-temperature-humidity-sensor.src/xiaomi-temperature-humidity-sensor.groovy
 https://raw.githubusercontent.com/takissd/MySmartThings/master/devicetypes/takis/smartweather-station-tile-2-0.src/smartweather-station-tile-2-0.groovy
+https://raw.githubusercontent.com/Kriskit/SmartThingsPublic/master/devicetypes/kriskit/trendsetter/switch-group-device.groovy
+https://raw.githubusercontent.com/Kriskit/SmartThingsPublic/master/devicetypes/kriskit/trendsetter/dimmer-group-device.groovy
+https://raw.githubusercontent.com/Kriskit/SmartThingsPublic/master/devicetypes/kriskit/trendsetter/colorful-light-group-device.groovy
+https://raw.githubusercontent.com/Kriskit/SmartThingsPublic/master/devicetypes/kriskit/trendsetter/power-meter-group-device.groovy
