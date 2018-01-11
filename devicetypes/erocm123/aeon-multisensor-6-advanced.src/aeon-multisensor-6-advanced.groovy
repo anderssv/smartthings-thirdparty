@@ -461,7 +461,7 @@ def convertParam(number, value) {
                 } else if (device.currentValue("currentFirmware") == "1.10") {
                     (value * 65536) + 512
                 } else if (device.currentValue("currentFirmware") == "1.10EU" || device.currentValue("currentFirmware") == "1.11EU") {
-                    (value * 65536) + 511
+                    (value * 65536) + 256
                 } else if (device.currentValue("currentFirmware") == "1.07EU" || device.currentValue("currentFirmware") == "1.08EU" || device.currentValue("currentFirmware") == "1.09EU") {
                     (value * 256) + 1
                 } else {
@@ -556,17 +556,23 @@ def update_needed_settings()
     def configuration = parseXml(configuration_model())
     def isUpdateNeeded = "NO"
     
-    if(!state.needfwUpdate || state.needfwUpdate == ""){
+    if(!state.needfwUpdate || state.needfwUpdate == "") {
        logging("Requesting device firmware version")
        cmds << zwave.versionV1.versionGet()
-    }    
+    }
+
+    if (state.currentProperties?."252" != [0]) {
+        logging("Unlocking configuration.")
+        cmds << zwave.configurationV1.configurationSet(configurationValue: integer2Cmd(0, 1), parameterNumber: 252, size: 1)
+        cmds << zwave.configurationV1.configurationGet(parameterNumber: 252)
+    }
 
     if(state.wakeInterval == null || state.wakeInterval != getAdjustedWake()){
         logging("Setting Wake Interval to ${getAdjustedWake()}")
         cmds << zwave.wakeUpV1.wakeUpIntervalSet(seconds: getAdjustedWake(), nodeid:zwaveHubNodeId)
         cmds << zwave.wakeUpV1.wakeUpIntervalGet()
     }
-   
+
     configuration.Value.each
     {     
         if ("${it.@setting_type}" == "zwave"){
@@ -588,7 +594,7 @@ def update_needed_settings()
                     if (it.@index == "41") {
                         if (device.currentValue("currentFirmware") == "1.06" || device.currentValue("currentFirmware") == "1.06EU") {
                             cmds << zwave.configurationV1.configurationSet(configurationValue: integer2Cmd(convertParam(it.@index.toInteger(), settings."${it.@index}".toInteger()), 2), parameterNumber: it.@index.toInteger(), size: 2)
-                        } else if (device.currentValue("currentFirmware") == "1.10" || device.currentValue("currentFirmware") == "1.10EU"|| device.currentValue("currentFirmware") == "1.11EU") {
+                        } else if (device.currentValue("currentFirmware") == "1.10" || device.currentValue("currentFirmware") == "1.10EU" || device.currentValue("currentFirmware") == "1.11EU") {
                             cmds << zwave.configurationV1.configurationSet(configurationValue: integer2Cmd(convertParam(it.@index.toInteger(), settings."${it.@index}".toInteger()), 4), parameterNumber: it.@index.toInteger(), size: 4)
                         } else {
                             cmds << zwave.configurationV1.configurationSet(configurationValue: integer2Cmd(convertParam(it.@index.toInteger(), settings."${it.@index}".toInteger()), 3), parameterNumber: it.@index.toInteger(), size: 3)
