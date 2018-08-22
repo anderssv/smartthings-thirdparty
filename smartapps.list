@@ -1,7 +1,7 @@
 https://raw.githubusercontent.com/sudarkoff/SmartThings/master/BetterLaundryMonitor.groovy
 https://raw.githubusercontent.com/krlaframboise/SmartThings/master/smartapps/krlaframboise/simple-device-viewer.src/simple-device-viewer.groovy
 https://raw.githubusercontent.com/erocm123/SmartThingsPublic/master/smartapps/erocm123/device-monitor.src/device-monitor.groovy
-https://raw.githubusercontent.com/TheFuzz4/SmartThingsSplunkLogger/master/splunklogger.groovy
+https://raw.githubusercontent.com/TheFuzz4/SmartThingsSplunkLogger/master/smartapps/thefuzz4/splunk-http-event-logger.src/splunk-http-event-logger.groovy
 https://raw.githubusercontent.com/Kriskit/SmartThingsPublic/master/smartapps/kriskit/trendsetter/group.groovy
 https://raw.githubusercontent.com/Kriskit/SmartThingsPublic/master/smartapps/kriskit/trendsetter/trend-setter.groovy
 https://raw.githubusercontent.com/tibbercom/tibber-smartthings-app/master/src/smartapp.groovy
