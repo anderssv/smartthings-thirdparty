@@ -1,5 +1,5 @@
 /**
- *  Fibaro Z-Wave FGK-101 Temperature & Door/Window Sensor Handler [v0.9.5.1, 20 December 2016]
+ *  Fibaro Z-Wave FGK-101 Temperature & Door/Window Sensor Handler [v0.9.5.2, 12 September 2018]
  *		
  *  Copyright 2014 Jean-Jacques GUILLEMAUD
  *
@@ -101,14 +101,14 @@ metadata {
         for (int i = 0; i <= T_values.size()-1; i += 1) {
             Ti=T_values.get(i)
         	def theSensorValue = [(short)0, (short)0, (short)(Ti*100)/256, (short)(Ti*100)%256]
-			status "temperature ${Ti}°C":  zwave.multiChannelV3.multiChannelCmdEncap(sourceEndPoint:2, destinationEndPoint:2).encapsulate(zwave.sensorMultilevelV2.sensorMultilevelReport(scaledSensorValue: i, precision: 2, scale: 0, sensorType: 1, sensorValue: theSensorValue, size:4)).incomingMessage()
+			// status "temperature ${Ti}°C":  zwave.multiChannelV3.multiChannelCmdEncap(sourceEndPoint:2, destinationEndPoint:2).encapsulate(zwave.sensorMultilevelV2.sensorMultilevelReport(scaledSensorValue: i, precision: 2, scale: 0, sensorType: 1, sensorValue: theSensorValue, size:4)).incomingMessage()
         }
 	}
 
 	tiles { 
     	valueTile("temperature", "device.temperature", inactiveLabel: false, width: 2, height: 2, canChangeIcon: true, canChangeBackground: true) {
         	// label:'${name}', label:'${currentValue}', unit:"XXX" work, but NOT label:'${device.name}', label:'${displayName}', unit:'${unit}', ...
-			state "temperature", label:'${currentValue}°', unit:"C", icon: "st.alarm.temperature.normal",
+			state "temperature", label:'${currentValue}°\n', unit:"C", icon: "st.alarm.temperature.normal",
 			// redondant lines added to avoid color interpolation on Dashboard (a feature or a bug ?!)
             backgroundColors:[							// ***on IDE Simulator***		// ***on iPad App***
 				[value: 14, color: "#0033ff"],			//     °C <=14 : dark blue		//     °C <=14	: dark blue 
@@ -132,7 +132,7 @@ metadata {
   /*      
         valueTile("temperatureF", "device.temperature", inactiveLabel: false, width: 2, height: 2, canChangeIcon: true, canChangeBackground: true) {
         	// label:'${name}', label:'${currentValue}', unit:"XXX" work, but NOT label:'${device.name}', label:'${displayName}', unit:'${unit}', ...
-			state "temperature", label:'${currentValue}°', unit:"F", icon: "st.alarm.temperature.normal",
+			state "temperature", label:'${currentValue}°\n', unit:"F", icon: "st.alarm.temperature.normal",
 			// redondant lines added to avoid color interpolation on Dashboard (a feature or a bug ?!)
             backgroundColors:[							// ***on IDE Simulator***		// ***on iPad App***
 				[value: 57, color: "#0033ff"],			//     °C <=14 : dark blue		//     °C <=14	: dark blue 
@@ -380,7 +380,7 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv2.SensorMultilevelR
         }
         //Round to nearest 1 decimal temperature value; convert to °F if needed
         def float ftempSign = temperatureScaleFC(scaledSensorValue) < 0 ? -1 : +1
-		def float ftemp = ftempSign * ((((int) (temperatureScaleFC(scaledSensorValue).abs()*100+5)/10)*1.0)/10)
+		def float ftemp = ftempSign * ((((temperatureScaleFC(scaledSensorValue).abs()*100+5)/10).intValue()*1.0)/10)
         if (debugLevel>=2) {
         	log.debug "ftempSign : ${ftempSign}"
         	log.debug "ftemp : ${ftemp}"
