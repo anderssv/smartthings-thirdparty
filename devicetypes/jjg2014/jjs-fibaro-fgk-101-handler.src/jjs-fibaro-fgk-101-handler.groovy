@@ -1,5 +1,5 @@
 /**
- *  Fibaro Z-Wave FGK-101 Temperature & Door/Window Sensor Handler [v0.9.5.2, 12 September 2018]
+ *  Fibaro Z-Wave FGK-101 Temperature & Door/Window Sensor Handler [v0.9.5.3, 29 November 2018]
  *		
  *  Copyright 2014 Jean-Jacques GUILLEMAUD
  *
@@ -261,10 +261,6 @@ def wakeUpResponse(cmdBlock) {
         // inclusion of Device in Association#2 is needed to enable SensorAlarmReport() Command [anti-Tampering protection]
         cmdBlock << zwave.associationV2.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId]).format()
         cmdBlock << "delay 1200"
-        // to disable the default Z-Wave+ network security mode for ALL Associations when pairing a firmware 3.2 Z-Wave+ FGK-101
-        def byte zeroConfigurationValue = 0
-        cmdBlock << zwave.configurationV2.configurationSet(parameterNumber: 72/*for FGK101*/, size: 1, configurationValue: [zeroConfigurationValue]).format()
-        cmdBlock << "delay 1200" 
         // inclusion of Device in Association#4 is needed for backward compatibility with non Z-Wave+ controlers
         cmdBlock << zwave.associationV2.associationSet(groupingIdentifier:4, nodeId:[zwaveHubNodeId]).format()
         cmdBlock << "delay 1200"
@@ -314,6 +310,9 @@ def wakeUpResponse(cmdBlock) {
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.wakeupv2.WakeUpNotification cmd) {
+		// IMPORTANT NOTE : when the batteryLevel becomes too low, Device reports become erratic, all periodic wakeUpNotifications stop
+        // and consequently BATTERYLEVEL IS NOT UPDATED ANYMORE every 24 hours, continuing to display the last (and obsolete) reported value.
+        // Curiously, asynchronous sensorMultilevelReports continue to arrive, for some time, making the Device look (partially) "alive"
     	if (debugLevel>=2) {log.debug "wakeupv2.WakeUpNotification $cmd"}
         def event = createEvent(descriptionText: "${device.displayName} woke up", isStateChange: true, displayed: false)
         def cmdBlock = []
@@ -322,6 +321,23 @@ def zwaveEvent(physicalgraph.zwave.commands.wakeupv2.WakeUpNotification cmd) {
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv2.SensorMultilevelReport cmd) {
+	// IMPORTANT NOTE : when the batteryLevel becomes too low, Device reports become erratic, all periodic wakeUpNotifications stop
+	// and consequently BATTERYLEVEL IS NOT UPDATED ANYMORE every 24 hours, continuing to display the last (and obsolete) reported value.
+	// Curiously, asynchronous sensorMultilevelReports continue to arrive, for some time, making the Device look (partially) "alive"
+	// This section resets the displayed battery level to 1% when the battery level is obsolete by more than 48h.
+    state.batteryInterval = (long) (24*60-45)*60*1000  // 1 day
+    def long nowTime = new Date().getTime()
+    if (nowTime-state.lastReportBattery > 3*state.batteryInterval) {  // reset batteryLevel to 1% if no update for 48-72 hours
+    	log.debug "obsolete (likely low) battery value : ${((nowTime-state.lastReportBattery)/3600000)} hours old"
+        sendEvent(name: "battery", displayed: true, isStateChange:true, unit: "%", value: 1, descriptionText: "${device.displayName} has a low battery")
+	    state.lastReportBattery = nowTime
+	}
+			//  Dirty temporary recovery fix for remote Devices which lost wakeUp capability but still get asynchromous SensorMultilevelReports
+			//  Forcing with the magnet a close/open transition after replacing the battery should (in most cases...) restore wakeUps
+                //def cmdBlock = []
+        		//cmdBlock=wakeUpResponse(cmdBlock)
+        		//return [response(cmdBlock)]
+        		//configure()
         def float scaledSensorValue = cmd.scaledSensorValue
         // Adjust measured temperature based on previous manual calibration; FGK-101 is natively °C
         switch (device.name) {
@@ -387,7 +403,7 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv2.SensorMultilevelR
         }
         // Next line needed because "update()" does not seem to work anymore
     	state.maxEventInterval = (long) (4*60-10)*60*1000  // at least 1 Temperature Report event every 4 hours
-        def long nowTime = new Date().getTime()
+        nowTime = new Date().getTime()
         if (debugLevel>=2) {
         	log.debug "cmd.scaledSensorValue : ${cmd.scaledSensorValue}"
         	log.debug "correction : ${scaledSensorValue-cmd.scaledSensorValue}"
@@ -552,12 +568,24 @@ def zwaveEvent(physicalgraph.zwave.Command cmd) {
 }
 
 // When a Temperature Event got lost in transit, the Watchdog requests a forced report at next wake up
-// The "reportNext()" alarm command is used to signal back from the Watchdog SmartApp to the sleepy device
+// The "reportNext()" alarm command is used to signal back from the Watchdog SmartApp to the sleepy Device Handler
 def reportNext(commandMsg) {
 	log.debug "reportNext !"
     log.debug "commandMsg : ${commandMsg}"
     state.forcedWakeUp = true
-    return []
+		// IMPORTANT NOTE : when the batteryLevel becomes too low, Device reports become erratic, all periodic wakeUpNotifications stop
+        // and consequently BATTERYLEVEL IS NOT UPDATED ANYMORE every 24 hours, continuing to display the last (and obsolete) reported value.
+        // Curiously, asynchronous sensorMultilevelReports continue to arrive, for some time, making the Device look (partially) "alive"
+    	// This section resets the displayed battery level to 1% when the battery level is obsolete by more than 48h.
+	// Next line may be needed because "update()" does not seem to work reliably anymore
+    state.batteryInterval = (long) (24*60-45)*60*1000  // 1 day
+    def long nowTime = new Date().getTime()
+    if (nowTime-state.lastReportBattery > 3*state.batteryInterval) {  // reset batteryLevel to 1% if no update for 48-72 hours
+    	log.debug "obsolete (likely low) battery value : ${((nowTime-state.lastReportBattery)/3600000)} hours old"
+        sendEvent(name: "battery", displayed: true, isStateChange:true, unit: "%", value: 1, descriptionText: "${device.displayName} has a low battery")
+	    state.lastReportBattery = nowTime
+	}
+	return []
 }
 
 ///////////////////
@@ -573,7 +601,7 @@ def updated() {
     state.lastReportTime = (long) 0
     state.lastReportBattery = (long) 0
 	// Real-time clock of sensors (ceramic resonator) is up to 3% inaccurate
-    state.batteryInterval = (long) (24*60-45)*60*1000  // at least 1 Battery Report event every 23:15 hours
+    state.batteryInterval = (long) (24*60-45)*60*1000  // 1 Battery Report event every 24 hours, rounded up to the nearest hourly wakeup
     state.maxEventInterval = (long) (4*60-10)*60*1000  // at least 1 Temperature Report event every 3:50 hours
     state.parseCount=(int) 0
     state.forcedWakeUp = true
@@ -613,7 +641,7 @@ def configure() {
         zwave.associationV2.associationSet(groupingIdentifier:2, nodeId:[zwaveHubNodeId]).format(),
         // get zwave version information
         zwave.versionV1.versionGet().format()
-	])
+	],1200)
 }
 
 def infos() {
@@ -623,6 +651,6 @@ def infos() {
     log.debug "device.id: ${device.id}"							// -> "75841488-ae76-4cac-b523-a2694e72c25a"
     log.debug "device.name: ${device.name}"						// -> "T001"
     log.debug "device.label: ${device.label}"						// -> "JJG"
-    log.debug "device.data: ${device.data}"   					// -> "[MSR:010F-0700-2000, endpointId:0]"
+    log.debug "device.data: ${device.data}"   					// -> "[endpointId:0, version: 2.1, MSR:010F-0700-2000]"
     //log.debug "'device.rawDescription': ${device.rawDescription}"	// -> "0 0 0x2001 0 0 0 c 0x30 0x9C 0x60 0x85 0x72 0x70 0x86 0x80 0x84 0x7A 0xEF 0x2B"
 }
