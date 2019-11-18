@@ -1,5 +1,5 @@
 /**
- *  Fibaro Z-Wave FGK-101 Temperature & Door/Window Sensor Handler [v0.9.5.3, 29 November 2018]
+ *  Fibaro Z-Wave FGK-101 Temperature & Door/Window Sensor Handler [v0.9.5.4, 3 December 2018]
  *		
  *  Copyright 2014 Jean-Jacques GUILLEMAUD
  *
@@ -278,10 +278,11 @@ def wakeUpResponse(cmdBlock) {
     if (nowTime-state.lastReportBattery > state.batteryInterval) {
 		cmdBlock << zwave.batteryV1.batteryGet().format()
         cmdBlock << "delay 1200"
+        //next 2 lines redondant since any open/closed status change is asynchronously notified... but useful in case of missing basicSet notification
+    	cmdBlock << zwave.basicV1.basicGet().format()
+    	cmdBlock << "delay 1200"
     }
-    //next 2 lines redondant since any open/closed status change is asynchronously notified
-    //cmdBlock << zwave.basicV1.basicGet().format()
-    //cmdBlock << "delay 1200"
+
     //next 2 lines redondant too : SensorBinaryReport(EndPoint: 1) == BasicReport
     //cmdBlock << zwave.multiChannelV3.multiChannelCmdEncap(sourceEndPoint: 1, destinationEndPoint: 1, commandClass:0x30 /*Sensor Binary*/, command:2).format()
     //cmdBlock << "delay 1200"
@@ -457,10 +458,13 @@ def sensorValueEvent(value) {
 	}
 }
 
-// BasicReport should never occur since all status change notifications are asynchronous via BasicSet
+// BasicReport should not be necessary since all status change notifications are asynchronous via BasicSet
+// But useful as defensive programming, in case of missed notifications, to make sure latest change has been properly reported and registered
 def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicReport cmd) {
 	sensorValueEvent(cmd.value)
     if (debugLevel>=2) {log.debug "basicv1.BasicReport $cmd.value"}
+    def cmdValue = cmd.value
+	return openClosed(cmd, cmdValue)
 }
 
 // To check that WakeUpInterval does not revert to 1mn instead of 1h
