@@ -126,7 +126,6 @@ def getPrice() {
         try {
             httpPostJson(params) { resp ->
                 if(resp.status == 200){
-                	log.debug(resp.data.data.viewer.homes[0])
                     def today = resp.data.data.viewer.homes[0].currentSubscription.priceInfo.today
                     def tomorrow = resp.data.data.viewer.homes[0].currentSubscription.priceInfo.tomorrow
 
