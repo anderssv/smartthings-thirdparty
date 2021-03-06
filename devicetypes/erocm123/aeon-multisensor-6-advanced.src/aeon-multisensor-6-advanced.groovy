@@ -52,8 +52,10 @@
         
         fingerprint deviceId: "0x2101", inClusters: "0x5E,0x86,0x72,0x59,0x85,0x73,0x71,0x84,0x80,0x30,0x31,0x70,0x7A", outClusters: "0x5A" // 1.06
         
-        fingerprint mfr:"0086", prod:"0102", model:"0064", deviceJoinName: "Aeon MultiSensor 6"
-
+        fingerprint mfr:"0086", prod:"0002", model:"0064", deviceJoinName: "Aeon MultiSensor 6" //EU //Aeotec MultiSensor 6
+	fingerprint mfr:"0086", prod:"0102", model:"0064", deviceJoinName: "Aeon MultiSensor 6" //US //Aeotec MultiSensor 6
+	fingerprint mfr:"0086", prod:"0202", model:"0064", deviceJoinName: "Aeon MultiSensor 6" //AU //Aeotec MultiSensor 6
+	
 	}
     preferences {
         input description: "Once you change values on this page, the corner of the \"configuration\" icon will change orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph"
@@ -527,7 +529,7 @@ def convertParam(number, value) {
 	switch (number){
         case 41:
             //Parameter difference between firmware versions
-        	if (settings."41".toInteger() != null && device.currentValue("currentFirmware") != null) {
+        	if (settings."41"?.toInteger() != null && device.currentValue("currentFirmware") != null) {
                     if (device.currentValue("currentFirmware")?.replaceAll("[A-Za-z]", "")?.toFloat() > 1.09) {
                         if (value < 10) {
                             logging("Firmware 1.09+ does not allow a setting below 10. If this parameter needs to be updated it will be set to the lowest possible value (10)")
@@ -563,14 +565,14 @@ def convertParam(number, value) {
         break
         case 45:
             //Parameter difference between firmware versions
-        	if (settings."45".toInteger() != null && device.currentValue("currentFirmware") != null && device.currentValue("currentFirmware") != "1.08")
+        	if (settings."45"?.toInteger() != null && device.currentValue("currentFirmware") != null && device.currentValue("currentFirmware") != "1.08")
             	2
             else
                 value
         break
         case 101:
-        	if (settings."40".toInteger() != null) {
-                if (settings."40".toInteger() == 1) {
+        	if (settings."40"?.toInteger() != null) {
+                if (settings."40"?.toInteger() == 1) {
                    0
                 } else {
                    value
