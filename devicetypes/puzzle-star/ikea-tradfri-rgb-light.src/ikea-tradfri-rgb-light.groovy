@@ -405,7 +405,7 @@ def on() {
   zigbee.on()
 }
 
-def setLevel(value) {
+def setLevel(value, rate=0) {
   zigbee.setLevel(value)
 }
 

@@ -41,3 +41,6 @@ downloadComponents("device-handlers.list", "devicetypes")
 downloadComponents("smartapps.list", "smartapps")
 
 print ("ALL OK\n")
+
+print ("Fixing setLevel for HA integration\n")
+os.system('find . -type f -exec sed -i "s/def setLevel(value, rate=0)/def setLevel(value, rate=0)/g" {} \;')
